@@ -31,23 +31,19 @@ export const addNodesToSVGChart = (
   svg: ReturnType<typeof createChartSVGContainer>,
   root: d3.HierarchyCircularNode<ICirclePackingData>
 ) => {
-  const node = svg;
-  // .append("g")
-  // .selectAll("circle")
-  // .data(root.descendants().slice(1))
-  // .join("circle");
-  // .attr("fill", (d) => (d.children ? getColorScale()(d.depth) : "white"))
-  // .attr("pointer-events", (d) => (!d.children ? "none" : null))
-  // .on("mouseover", function () {
-  //   d3.select(this).attr("stroke", "#000");
-  // })
-  // .on("mouseout", function () {
-  //   d3.select(this).attr("stroke", null);
-  // })
-  // .on(
-  //   "click",
-  //   (event, d) => root !== d && (zoom(event, d), event.stopPropagation())
-  // );
+  const node = svg
+    .append("g")
+    .selectAll("circle")
+    .data(root.descendants().slice(1))
+    .join("circle")
+    .attr("fill", (d) => (d.children ? getColorScale()(d.depth) : "white"))
+    .attr("pointer-events", (d) => (!d.children ? "none" : null))
+    .on("mouseover", function () {
+      d3.select(this).attr("stroke", "#000");
+    })
+    .on("mouseout", function () {
+      d3.select(this).attr("stroke", null);
+    });
 
   return node;
 };
@@ -67,3 +63,73 @@ export const addLabelsToBubbles = (
     .style("fill-opacity", (d) => (d.parent === root ? 1 : 0))
     .style("display", (d) => (d.parent === root ? "inline" : "none"))
     .text((d) => d.data.name);
+
+export const getTransition = (
+  event: MouseEvent,
+  view: d3.ZoomView,
+  focus: d3.HierarchyCircularNode<ICirclePackingData>,
+  zoomTo: (newZoomValue: d3.ZoomView) => () => void
+) => {
+  const transition = d3
+    .transition()
+    .duration(event.altKey ? 7500 : 750)
+    .tween("zoom", () => {
+      const interpolate = d3.interpolateZoom(view, [
+        focus.x,
+        focus.y,
+        focus.r * 2,
+      ]);
+      return (t) => {
+        const newZoomValue = interpolate(t);
+        zoomTo(newZoomValue)();
+      };
+    });
+
+  return transition;
+};
+
+export const addTransitionToBubbleLabels = (
+  bubblesLabels: ReturnType<typeof addLabelsToBubbles>,
+  focus: d3.HierarchyCircularNode<ICirclePackingData>,
+  transition: ReturnType<typeof getTransition>
+) => {
+  bubblesLabels
+    .filter(function (d) {
+      return d.parent === focus || this.style.display === "inline";
+    })
+    .transition(transition)
+    .style("fill-opacity", (d) => (d.parent === focus ? 1 : 0))
+    .on("start", function (d) {
+      if (d.parent === focus) this.style.display = "inline";
+    })
+    .on("end", function (d) {
+      if (d.parent !== focus) this.style.display = "none";
+    });
+};
+
+export function zoomTo(
+  bubblesLabels: ReturnType<typeof addLabelsToBubbles>,
+  bubbles: ReturnType<typeof addNodesToSVGChart>,
+  width: number,
+  view: d3.ZoomView
+) {
+  const zoomScale = width / view[2];
+
+  bubblesLabels.attr(
+    "transform",
+    (label) =>
+      `translate(${(label.x - view[0]) * zoomScale},${
+        (label.y - view[1]) * zoomScale
+      })`
+  );
+
+  bubbles
+    .attr(
+      "transform",
+      (bubble) =>
+        `translate(${(bubble.x - view[0]) * zoomScale},${
+          (bubble.y - view[1]) * zoomScale
+        })`
+    )
+    .attr("r", (d) => d.r * zoomScale);
+}

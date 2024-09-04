@@ -18,6 +18,7 @@ const CirclePackingChart = (props: ICirclePackingChartProps) => {
   // const [root, setRoot] = useState<d3.HierarchyNode<ICirclePackingData>>();
   const [selectedNode, setSelectedNode] = useState<{
     node: d3.HierarchyCircularNode<ICirclePackingData>;
+    nodeKey: string;
     transformLabel: string;
     transformBubble: string;
     bubbleR: number;
@@ -26,10 +27,6 @@ const CirclePackingChart = (props: ICirclePackingChartProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const D3Svg = createChartSVGContainer(svgRef.current);
-  const root = d3
-    .hierarchy<ICirclePackingData>(props.data)
-    .sum((d) => d.value || 1)
-    .sort((a, b) => (b.value || 0) - (a.value || 0));
 
   const packedData = packRootSVG(width, height, props.data);
   let view: d3.ZoomView = [0, 0, 0];
@@ -40,23 +37,25 @@ const CirclePackingChart = (props: ICirclePackingChartProps) => {
 
   const zoomTo = (
     v: d3.ZoomView,
-    node: d3.HierarchyCircularNode<ICirclePackingData>
+    node: d3.HierarchyCircularNode<ICirclePackingData>,
+    i: number
   ) => {
     view = v;
     const k = width / v[2];
     if (node) {
-      const valor = node.x - v[0];
-      console.log(valor);
-      const transformLabel = `translate(${(node.x - v[0]) * k},${
-        (node.y - v[1]) * k
-      })`;
-      const transformBubble = `translate(${(node.x - v[0]) * k},${
-        (node.y - v[1]) * k
-      })`;
-      const bubbleR = node.r * k;
+      console.log(node);
+      // const xPosition = node.x - v[0];
+      // const yPosition = node.y - v[1];
+      const xPosition = packedData.x / 2;
+      const yPosition = packedData.y / 2;
+
+      const transformLabel = `translate(${xPosition * k},${yPosition * k})`;
+      const transformBubble = `translate(${xPosition * k},${yPosition * k})`;
+      const bubbleR = node.r * 2;
 
       setSelectedNode({
         node,
+        nodeKey: `node${i}`,
         transformLabel,
         transformBubble,
         bubbleR,
@@ -91,13 +90,21 @@ const CirclePackingChart = (props: ICirclePackingChartProps) => {
         }}
       >
         <g>
-          {nodes.slice(1).map((node, i) => (
+          {nodes.slice(1).map((node, idx) => (
             <circle
-              key={i}
+              key={idx}
               cx={node.x}
               cy={node.y}
-              r={selectedNode ? selectedNode.bubbleR : node.r}
-              transform={selectedNode && selectedNode.transformBubble}
+              r={
+                selectedNode?.nodeKey === `node${idx}`
+                  ? selectedNode.bubbleR
+                  : node.r
+              }
+              transform={
+                selectedNode?.nodeKey === `node${idx}`
+                  ? selectedNode.transformBubble
+                  : ""
+              }
               fill={node.children ? getColorScale()(node.depth) : "white"}
               pointerEvents={node.children ? "all" : "none"}
               onMouseOver={(e) =>
@@ -106,19 +113,10 @@ const CirclePackingChart = (props: ICirclePackingChartProps) => {
               onMouseOut={(e) => e.currentTarget.setAttribute("stroke", "none")}
               onClick={(event) => {
                 if (node !== nodes[0]) {
+                  event.stopPropagation();
                   console.log(node);
+                  // zoomTo(view, node, i);
 
-                  // D3Svg.transition()
-                  //   .duration(event.altKey ? 7500 : 750)
-                  //   .tween("zoom", (d) => {
-                  //     const i = d3.interpolateZoom(view, [
-                  //       node.x,
-                  //       node.y,
-                  //       node.r * 2,
-                  //     ]);
-                  //     console.log("i", i);
-                  //     return (t) => zoomTo(i(t), node);
-                  //   });
                   // event.stopPropagation();
                 }
               }}
@@ -137,8 +135,8 @@ const CirclePackingChart = (props: ICirclePackingChartProps) => {
               // transform={selectedNode && selectedNode.transformLabel}
               style={{
                 font: "10px sans-serif",
-                fillOpacity: d.parent === root ? 1 : 0,
-                display: d.parent === root ? "inline" : "none",
+                fillOpacity: d.parent === packedData ? 1 : 0,
+                display: d.parent === packedData ? "inline" : "none",
               }}
             >
               {d.data.name}
