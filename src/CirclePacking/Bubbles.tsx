@@ -21,13 +21,13 @@ interface ICirclePackingChartProps {
 const Bubbles = ({ data }: ICirclePackingChartProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef(null);
+  const bubblesRef = useRef(null);
 
   const root = packRootSVG(width, height, data);
+  let referenceNode = root;
+  let referenceView: d3.ZoomView;
   useEffect(() => {
     if (containerRef.current && svgRef.current) {
-      let referenceNode = root;
-      let referenceView: d3.ZoomView;
-
       const svg = createChartSVGContainer(svgRef.current);
       const bubbles = addNodesToSVGChart(svg, root);
       bubbles.on(
@@ -97,6 +97,7 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
         border: "dashed 1px red",
         display: "flex",
         justifyContent: "center",
+        backgroundColor: "#F7F8FA",
       }}
     >
       <svg
@@ -108,8 +109,9 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
           maxWidth: "100%",
           height: "auto",
           display: "block",
-          margin: "0 -14px",
-          backgroundColor: getColorScale()(0),
+          padding: 24,
+          // margin: "0 -14px",
+          // backgroundColor: "white",
           cursor: "pointer",
         }}
       ></svg>

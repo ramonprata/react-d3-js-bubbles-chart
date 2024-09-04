@@ -1,11 +1,8 @@
-import React, { useState } from "react";
-import * as d3 from "d3";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-import CirclePackingChart from "./CirclePacking/CirclePackingChart";
 import Bubbles from "./CirclePacking/Bubbles";
-import { BUBBLES_MOCK } from "./CirclePacking/mock/bubblesData.mock";
+import { BUBBLES_MOCK_REAL_DATA } from "./CirclePacking/mock/bubblesData.mock";
 
 function App() {
   return (
@@ -18,9 +15,7 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>Vite + React</h1>
-      {/* <CirclePackingChart data={BUBBLES_MOCK} /> */}
-      <Bubbles data={BUBBLES_MOCK} />
+      <Bubbles data={BUBBLES_MOCK_REAL_DATA} />
     </>
   );
 }

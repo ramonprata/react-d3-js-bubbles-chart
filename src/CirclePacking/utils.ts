@@ -1,12 +1,15 @@
 import * as d3 from "d3";
 import { ICirclePackingData } from "./types/ICirclePackingData";
 
-// Create the color scale.
 export const getColorScale = () => {
   return d3
     .scaleLinear<string>()
-    .domain([0, 5])
-    .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
+    .domain([0, 0.15, 0.2])
+    .range([
+      "rgba(237, 37, 78, 0.2)",
+      "rgba(255, 161, 25, 0.2)",
+      "rgba(18, 135, 28, 0.2)",
+    ])
     .interpolate(d3.interpolateHcl);
 };
 
@@ -15,7 +18,7 @@ export const packRootSVG = (
   height: number,
   data: ICirclePackingData
 ) => {
-  return d3.pack<ICirclePackingData>().size([width, height]).padding(3)(
+  return d3.pack<ICirclePackingData>().size([width, height]).padding(8)(
     d3
       .hierarchy<ICirclePackingData>(data)
       .sum((d) => Number(d.value ?? 0))
@@ -36,10 +39,26 @@ export const addNodesToSVGChart = (
     .selectAll("circle")
     .data(root.descendants().slice(1))
     .join("circle")
-    .attr("fill", (d) => (d.children ? getColorScale()(d.depth) : "white"))
+    .attr("fill", (d) => {
+      if (d.depth === 1) {
+        return "white";
+      }
+      if (d.data.equity) {
+        const number = parseFloat(d.data.equity?.replace("%", ""));
+        const equalityValue = number / 100;
+        if (equalityValue <= 0) {
+          return "#FF143C30";
+        }
+        if (equalityValue <= 0.15) {
+          return "#FFA11930";
+        }
+
+        return "#06A22830";
+      }
+    })
     .attr("pointer-events", (d) => (!d.children ? "none" : null))
     .on("mouseover", function () {
-      d3.select(this).attr("stroke", "#000");
+      d3.select(this).attr("stroke", "#fff").attr("stroke-width", "3");
     })
     .on("mouseout", function () {
       d3.select(this).attr("stroke", null);
@@ -54,7 +73,9 @@ export const addLabelsToBubbles = (
 ) =>
   svg
     .append("g")
-    .style("font", "10px sans-serif")
+    .style("font", "16px")
+    .style("color", "#121619")
+    .style("font-weight", "bold")
     .attr("pointer-events", "none")
     .attr("text-anchor", "middle")
     .selectAll("text")
@@ -77,7 +98,7 @@ export const getTransition = (
       const interpolate = d3.interpolateZoom(view, [
         focus.x,
         focus.y,
-        focus.r * 2,
+        focus.r * 3,
       ]);
       return (t) => {
         const newZoomValue = interpolate(t);
@@ -133,3 +154,23 @@ export function zoomTo(
     )
     .attr("r", (d) => d.r * zoomScale);
 }
+
+export const getColorEquality = (
+  d: d3.HierarchyCircularNode<ICirclePackingData>
+) => {
+  if (d.depth === 1) {
+    return "white";
+  }
+  if (d.data.equity) {
+    const number = parseFloat(d.data.equity?.replace("%", ""));
+    const equalityValue = number / 100;
+    if (equalityValue <= 0) {
+      return "#FF143C30";
+    }
+    if (equalityValue <= 0.15) {
+      return "#FFA11930";
+    }
+
+    return "#06A22830";
+  }
+};
