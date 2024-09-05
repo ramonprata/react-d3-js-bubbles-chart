@@ -1,4 +1,4 @@
-interface INodeVale {
+export interface INodeVale {
   name: string;
   value?: number;
   equity?: string;

@@ -1,36 +1,41 @@
-import { useRef, useState } from "react";
-import { ICirclePackingData } from "./types/ICirclePackingData";
-import { getColorEquality } from "./utils";
+import { useSpring, animated } from "react-spring";
+import { useState } from "react";
+import { TBubbleDataNode } from "./types/TBubbleDataNode";
+import { getColorEquity } from "./utils";
+
 type Props = {
-  node: d3.HierarchyCircularNode<ICirclePackingData>;
+  bubble: TBubbleDataNode;
   idx: number;
 };
-const Circle = ({ node, idx }: Props) => {
-  const circleRef = useRef(null);
 
-  const [transition, setTransition] = useState(
-    () => `translate(${node.x} ${node.y})`
-  );
+const Circle = ({ bubble, idx }: Props) => {
+  const [isHovered, setIsHovered] = useState(false);
 
-  const onClick = () => {
-    const zoomScale = 1.2;
-    setTransition(
-      `translate(${(node.x - 8) * zoomScale},${(node.y - 8) * zoomScale})`
-    );
-  };
+  const { cx, cy, r, opacity } = useSpring({
+    to: { cx: bubble.x, cy: bubble.y, r: bubble.r, opacity: 1 },
+    from: { cx: 0, cy: 0, r: 0, opacity: 0 },
+    config: { duration: 1000 },
+  });
+
+  const hoverProps = useSpring({
+    r: isHovered ? bubble.r * 1.4 : bubble.r,
+    config: { tension: 300, friction: 10 },
+  });
+
   return (
-    <circle
-      ref={circleRef}
-      key={idx}
-      r={node.r}
-      transform={transition}
-      fill={getColorEquality(node)}
-      pointerEvents={node.children ? "all" : "none"}
-      onMouseOver={(e) => e.currentTarget.setAttribute("stroke", "#000")}
-      onMouseOut={(e) => e.currentTarget.setAttribute("stroke", "none")}
-      onClick={(event) => {
-        // onClick();
+    <animated.circle
+      cx={cx}
+      cy={cy}
+      r={bubble.depth > 1 ? hoverProps.r : bubble.r}
+      fill={getColorEquity(bubble)}
+      fillOpacity={opacity}
+      onMouseEnter={() => {
+        setIsHovered(true);
       }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+      }}
+      style={{ cursor: "pointer" }}
     />
   );
 };

@@ -1,121 +1,176 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import * as d3 from "d3";
 import {
   addLabelsToBubbles,
   addNodesToSVGChart,
   addTransitionToBubbleLabels,
   createChartSVGContainer,
-  getColorScale,
   getTransition,
   packRootSVG,
+  SVG_HEIGHT,
+  SVG_WIDTH,
+  zoomTo,
 } from "./utils";
 import { ICirclePackingData } from "./types/ICirclePackingData";
-
-const width = 928;
-const height = width;
+import { TBubbleDataNode } from "./types/TBubbleDataNode";
+import { groupDataByEquity, groupDataByValue } from "./groupData";
+import Circle from "./Circle";
+import Text from "./Text";
 
 interface ICirclePackingChartProps {
   data: ICirclePackingData;
 }
 
+type TGroupTypes = "satelite" | "touchPoint" | "equity";
+
 const Bubbles = ({ data }: ICirclePackingChartProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef(null);
-  const bubblesRef = useRef(null);
 
-  const root = packRootSVG(width, height, data);
-  let referenceNode = root;
-  let referenceView: d3.ZoomView;
-  useEffect(() => {
-    if (containerRef.current && svgRef.current) {
-      const svg = createChartSVGContainer(svgRef.current);
-      const bubbles = addNodesToSVGChart(svg, root);
-      bubbles.on(
-        "click",
-        (event, d) =>
-          referenceNode !== d && (zoom(event, d), event.stopPropagation())
-      );
+  const [group, setGroup] = useState<TGroupTypes>("satelite");
 
-      const bubblesLabels = addLabelsToBubbles(svg, root);
+  const [dataGroup, setDataGroup] =
+    useState<ICirclePackingChartProps["data"]>(data);
 
-      function zoomTo(focusView: d3.ZoomView) {
-        const zoomScale = width / focusView[2];
+  const bubblesRef = useRef<ReturnType<typeof addNodesToSVGChart> | null>(null);
+  const bubblesLabelsRef = useRef<ReturnType<typeof addLabelsToBubbles> | null>(
+    null
+  );
 
-        referenceView = focusView;
-        return () => {
-          bubblesLabels.attr(
-            "transform",
-            (label) =>
-              `translate(${(label.x - focusView[0]) * zoomScale},${
-                (label.y - focusView[1]) * zoomScale
-              })`
-          );
+  // Define os dados com base no estado atual
+  const newData = dataGroup;
+  const root = packRootSVG(newData);
+  // if (svgRef.current) {
+  //   bubblesRef.current = addNodesToSVGChart(svgRef.current, root);
+  //   bubblesLabelsRef.current = addLabelsToBubbles(svgRef.current, root);
+  // }
 
-          bubbles
-            .attr(
-              "transform",
-              (bubble) =>
-                `translate(${(bubble.x - focusView[0]) * zoomScale},${
-                  (bubble.y - focusView[1]) * zoomScale
-                })`
-            )
-            .attr("r", (d) => d.r * zoomScale);
-        };
-      }
+  // let referenceNode = root;
+  // const referenceView = useRef<d3.ZoomView>([root.x, root.y, root.r]);
+  // const boundZoomTo = zoomTo.bind(
+  //   null,
+  //   bubblesRef,
+  //   bubblesLabelsRef,
+  //   referenceView
+  // );
 
-      function zoom(
-        event: MouseEvent,
-        node: d3.HierarchyCircularNode<ICirclePackingData>
-      ) {
-        referenceNode = node;
-        const transition = getTransition(
-          event,
-          referenceView,
-          referenceNode,
-          zoomTo
-        );
-        addTransitionToBubbleLabels(bubblesLabels, referenceNode, transition);
-      }
+  // const zoom = useCallback(
+  //   (
+  //     event: React.MouseEvent<SVGSVGElement, MouseEvent>,
+  //     node: TBubbleDataNode
+  //   ) => {
+  //     event.stopPropagation();
+  //     referenceNode = node;
+  //     const transition = getTransition(
+  //       referenceView.current,
+  //       referenceNode,
+  //       boundZoomTo
+  //     );
+  //     addTransitionToBubbleLabels(
+  //       bubblesLabelsRef.current,
+  //       referenceNode,
+  //       transition
+  //     );
+  //   },
+  //   []
+  // );
 
-      svg.on("click", (event) => zoom(event, root));
+  // useEffect(() => {
+  //   if (containerRef.current && svgRef.current) {
+  //     const svg = createChartSVGContainer(svgRef.current);
+  //     bubblesRef.current = addNodesToSVGChart(svgRef.current, root);
+  //     bubblesLabelsRef.current = addLabelsToBubbles(svgRef.current, root);
 
-      zoomTo([referenceNode.x, referenceNode.y, referenceNode.r * 2])();
+  //     bubblesRef.current.on(
+  //       "click",
+  //       (event, d) =>
+  //         referenceNode !== d && (zoom(event, d), event.stopPropagation())
+  //     );
 
-      return () => {
-        svg.selectAll("*").remove();
-      };
+  //     boundZoomTo([referenceNode.x, referenceNode.y, referenceNode.r * 2]);
+
+  //     return () => {
+  //       svg.selectAll("*").remove();
+  //     };
+  //   }
+  // }, [boundZoomTo, referenceNode, root, zoom]);
+
+  const onGroup = (value: TGroupTypes) => {
+    setGroup(value);
+    if (value === "satelite") {
+      setDataGroup(data);
     }
-  }, [data, root]);
+    if (value === "touchPoint") {
+      setDataGroup(groupDataByValue(data));
+    }
+    if (value === "equity") {
+      setDataGroup(groupDataByEquity(data));
+    }
+  };
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: "100%",
-        height: "100%",
-        minHeight: "50vh",
-        border: "dashed 1px red",
-        display: "flex",
-        justifyContent: "center",
-        backgroundColor: "#F7F8FA",
-      }}
-    >
-      <svg
-        width={width}
-        height={height}
-        ref={svgRef}
-        viewBox={`-${width / 2} -${height / 2} ${width} ${height}`}
+    <>
+      <div
         style={{
-          maxWidth: "100%",
-          height: "auto",
-          display: "block",
           padding: 24,
-          // margin: "0 -14px",
-          // backgroundColor: "white",
-          cursor: "pointer",
+          display: "flex",
+          flexDirection: "row",
+          gap: 24,
+          justifyContent: "center",
         }}
-      ></svg>
-    </div>
+      >
+        <button onClick={() => onGroup("equity")}>Group by equity</button>
+        <button onClick={() => onGroup("touchPoint")}>
+          Group by touchpoint values
+        </button>
+        <button onClick={() => onGroup("satelite")}>Group by satelites</button>
+      </div>
+      <div
+        ref={containerRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          minHeight: "50vh",
+          border: "dashed 1px red",
+          display: "flex",
+          justifyContent: "center",
+          backgroundColor: "#F7F8FA",
+        }}
+      >
+        <svg
+          onClick={(event) => {
+            // zoom(event, root);
+          }}
+          width={SVG_WIDTH}
+          height={SVG_WIDTH}
+          ref={svgRef}
+          style={{
+            maxWidth: "100%",
+            height: "auto",
+            display: "block",
+            padding: 24,
+            cursor: "pointer",
+          }}
+        >
+          <g>
+            {root
+              .descendants()
+              .slice(1)
+              .map((bubble, idx) => (
+                <Circle bubble={bubble} idx={idx} key={idx} />
+              ))}
+          </g>
+          {/* <g>
+            {root
+              .descendants()
+              .slice(1)
+              .map((bubble, idx) => (
+                <Text bubble={bubble} idx={idx} />
+              ))}
+          </g> */}
+        </svg>
+      </div>
+    </>
   );
 };
 
