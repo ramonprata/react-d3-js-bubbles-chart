@@ -1,119 +1,141 @@
-import { useRef, useEffect, useState } from "react";
-import * as d3 from "d3";
-import { addLabelsToBubbles, getColorScale, packRootSVG } from "./utils";
-import { ICirclePackingData } from "./types/ICirclePackingData";
-import { TBubbleDataNode } from "./types/TBubbleDataNode";
+import { useCallback, useRef, useState } from "react";
 
-const width = 928;
-const height = width;
+import { packRootSVG, SVG_WIDTH } from "./utils";
+import { ICirclePackingData } from "./types/ICirclePackingData";
+import { groupDataByEquity, groupDataByValue } from "./groupData";
+
+import Bubble from "./Bubble";
+import { TBubbleDataNode } from "./types/TBubbleDataNode";
+import BubblesGroup from "./BubblesGroup";
 
 interface ICirclePackingChartProps {
   data: ICirclePackingData;
 }
 
+type TGroupTypes = "satelite" | "touchPoint" | "equity";
+
 const Bubbles = ({ data }: ICirclePackingChartProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef(null);
 
-  const root = packRootSVG(data);
-  const [referenceNode, setReferenceNode] = useState(root);
-  const [referenceView, setReferenceView] = useState<[number, number, number]>([
-    root.x,
-    root.y,
-    root.r * 2,
-  ]);
-  const [nodes, setNodes] = useState(() => root.descendants().slice(1));
+  const [group, setGroup] = useState<TGroupTypes>("satelite");
 
-  useEffect(() => {
-    // setNodes(root.descendants().slice(1)); // Atualiza nós ao mudar os dados
-  }, [data, root]);
+  const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
 
-  const zoomTo = (focusView: [number, number, number]) => {
-    const zoomScale = width / focusView[2];
-    setReferenceView(focusView);
-    return nodes.map((node) => ({
-      ...node,
-      x: (node.x - focusView[0]) * zoomScale,
-      y: (node.y - focusView[1]) * zoomScale,
-      r: node.r * zoomScale,
-    }));
+  const [dataGroup, setDataGroup] =
+    useState<ICirclePackingChartProps["data"]>(data);
+
+  const root = packRootSVG(dataGroup);
+
+  const [bubbles, setBubbles] = useState<TBubbleDataNode[]>(() =>
+    root.descendants().slice(1)
+  );
+
+  const resetScale = () => {
+    setTransform({
+      y: 0,
+      x: 0,
+      k: 1,
+    });
   };
 
-  const handleZoom = (
-    event: React.MouseEvent<SVGCircleElement, MouseEvent>,
-    node: TBubbleDataNode
-  ) => {
-    if (referenceNode !== node) {
-      setReferenceNode(node);
-      setNodes(zoomTo([node.x, node.y, node.r * 2]));
+  const onGroup = (value: TGroupTypes) => {
+    if (transform.k > 1) {
+      resetScale();
     }
+    setGroup(value);
+    if (value === "satelite") {
+      setDataGroup(data);
+    }
+    if (value === "touchPoint") {
+      setDataGroup(groupDataByValue(data));
+    }
+    if (value === "equity") {
+      setDataGroup(groupDataByEquity(data));
+    }
+    setBubbles(root.descendants().slice(1));
   };
 
-  const resetZoom = () => {
-    setReferenceNode(root);
-    setNodes(zoomTo([root.x, root.y, root.r * 2]));
-  };
+  const onClickBubble = useCallback(
+    (bubble: TBubbleDataNode) => {
+      if (bubble.depth <= 1) {
+        const scale = SVG_WIDTH / (bubble.r * 3);
+        const translateX = SVG_WIDTH / 2 - bubble.x * scale;
+        const translateY = SVG_WIDTH / 2 - bubble.y * scale;
+
+        if (transform.k === 1) {
+          setTransform({ x: translateX, y: translateY, k: scale });
+        } else {
+          setTransform({ x: 0, y: 0, k: 1 });
+          setTimeout(() => {
+            setTransform({ x: translateX, y: translateY, k: scale });
+          }, 500);
+        }
+      }
+    },
+    [transform.k]
+  );
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: "100%",
-        height: "100%",
-        minHeight: "50vh",
-        border: "dashed 1px red",
-        display: "flex",
-        justifyContent: "center",
-        backgroundColor: "#F7F8FA",
-      }}
-    >
-      <svg
-        width={width}
-        height={height}
-        viewBox={`-${width / 2} -${height / 2} ${width} ${height}`}
+    <>
+      <div
         style={{
-          maxWidth: "100%",
-          height: "auto",
-          display: "block",
           padding: 24,
-          margin: "0 -14px",
-          backgroundColor: "white",
-          cursor: "pointer",
+          display: "flex",
+          flexDirection: "row",
+          gap: 24,
+          justifyContent: "center",
         }}
-        onClick={resetZoom}
       >
-        <defs>
-          {/* Gradientes e definições de estilos adicionais podem ser adicionados aqui */}
-        </defs>
-        {/* Renderizando as bolhas com JSX */}
-        {nodes.map((node, index) => (
-          <circle
-            key={index}
-            cx={node.x}
-            cy={node.y}
-            r={node.r}
-            // fill="url(#radial-gradient)" // Customize o preenchimento conforme necessário
-            fill={gete}
-            onClick={(event) => handleZoom(event, node)}
-          />
-        ))}
-        {/* Renderizando os rótulos */}
-        {nodes.map((node, index) => (
-          <text
-            key={`label-${index}`}
-            x={node.x}
-            y={node.y}
-            textAnchor="middle"
-            alignmentBaseline="middle"
-            style={{
-              pointerEvents: "none",
-              fontSize: `${node.r / 5}px`,
-            }}
-          >
-            {node.data.name}
-          </text>
-        ))}
-      </svg>
-    </div>
+        <button onClick={() => onGroup("equity")}>Group by equity</button>
+        <button onClick={() => onGroup("touchPoint")}>
+          Group by touchpoint values
+        </button>
+        <button onClick={() => onGroup("satelite")}>Group by satelites</button>
+      </div>
+      <div
+        ref={containerRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          minHeight: "50vh",
+          border: "dashed 1px red",
+          display: "flex",
+          justifyContent: "center",
+          backgroundColor: "#F7F8FA",
+          position: "relative",
+          top: 0,
+          left: 0,
+        }}
+      >
+        <svg
+          onClick={() => resetScale()}
+          width={SVG_WIDTH}
+          height={SVG_WIDTH}
+          ref={svgRef}
+          style={{
+            maxWidth: "100%",
+            height: "auto",
+            display: "block",
+            padding: 24,
+            cursor: "pointer",
+          }}
+        >
+          <BubblesGroup x={transform.x} y={transform.y} k={transform.k}>
+            {bubbles.map((bubble, idx) => {
+              return (
+                <Bubble
+                  bubble={bubble}
+                  idx={idx}
+                  key={idx}
+                  onClickBubble={onClickBubble}
+                />
+              );
+            })}
+          </BubblesGroup>
+        </svg>
+      </div>
+    </>
   );
 };
 

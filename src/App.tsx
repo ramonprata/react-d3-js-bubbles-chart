@@ -16,8 +16,8 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div> */}
-      <Bubbles data={BUBBLES_MOCK_REAL_DATA} />
-      {/* <ReactBubbles data={BUBBLES_MOCK_REAL_DATA} /> */}
+      {/* <Bubbles data={BUBBLES_MOCK_REAL_DATA} /> */}
+      <ReactBubbles data={BUBBLES_MOCK_REAL_DATA} />
     </>
   );
 }

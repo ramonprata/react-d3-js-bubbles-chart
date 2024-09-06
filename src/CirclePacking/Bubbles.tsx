@@ -14,12 +14,14 @@ import {
 import { ICirclePackingData } from "./types/ICirclePackingData";
 import { TBubbleDataNode } from "./types/TBubbleDataNode";
 import { groupDataByEquity, groupDataByValue } from "./groupData";
-import Circle from "./Circle";
+import Circle from "./Bubble";
 import Text from "./Text";
+import Bubble from "./Bubble";
 
 interface ICirclePackingChartProps {
   data: ICirclePackingData;
 }
+const MIN_RADIUS = 25;
 
 type TGroupTypes = "satelite" | "touchPoint" | "equity";
 
@@ -157,17 +159,9 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
               .descendants()
               .slice(1)
               .map((bubble, idx) => (
-                <Circle bubble={bubble} idx={idx} key={idx} />
+                <Bubble bubble={bubble} idx={idx} key={idx} />
               ))}
           </g>
-          {/* <g>
-            {root
-              .descendants()
-              .slice(1)
-              .map((bubble, idx) => (
-                <Text bubble={bubble} idx={idx} />
-              ))}
-          </g> */}
         </svg>
       </div>
     </>
