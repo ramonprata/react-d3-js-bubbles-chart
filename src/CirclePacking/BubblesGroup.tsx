@@ -8,10 +8,7 @@ interface IBubblesGroupProps extends PropsWithChildren {
 }
 const BubblesGroup = ({ children, x, y, k }: IBubblesGroupProps) => {
   const styles = useSpring({
-    transform:
-      k !== 1
-        ? `translate(${x}px, ${y}px) scale(${k})`
-        : "translate(0px, 0px) scale(1)",
+    transform: `translate(${x}px, ${y}px) scale(${k})`,
     config: { tension: 170, friction: 26 },
   });
 

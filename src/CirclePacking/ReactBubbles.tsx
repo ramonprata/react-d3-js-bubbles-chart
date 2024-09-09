@@ -1,35 +1,64 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { packRootSVG, SVG_WIDTH } from "./utils";
+import { packRootSVG } from "./utils";
 import { ICirclePackingData } from "./types/ICirclePackingData";
 import { groupDataByEquity, groupDataByValue } from "./groupData";
 
 import Bubble from "./Bubble";
 import { TBubbleDataNode } from "./types/TBubbleDataNode";
 import BubblesGroup from "./BubblesGroup";
+import BubbleColors from "./BubbleColors";
 
 interface ICirclePackingChartProps {
   data: ICirclePackingData;
 }
 
-type TGroupTypes = "satelite" | "touchPoint" | "equity";
+type TGroupTypes = "satellite" | "touchPoint" | "equity";
 
 const Bubbles = ({ data }: ICirclePackingChartProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef(null);
 
-  const [group, setGroup] = useState<TGroupTypes>("satelite");
+  const [group, setGroup] = useState<TGroupTypes>("satellite");
 
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
+  const [dynamicDimensions, setDynamicDimensions] = useState({
+    width: 0,
+    height: 0,
+    top: 0,
+  });
 
-  const [dataGroup, setDataGroup] =
-    useState<ICirclePackingChartProps["data"]>(data);
+  useEffect(() => {
+    if (containerRef.current) {
+      const { width, top } = containerRef.current.getBoundingClientRect();
+      setDynamicDimensions({
+        width: width,
+        height: window.innerHeight - top,
+        top,
+      });
+    }
+  }, [containerRef]);
 
-  const root = packRootSVG(dataGroup);
-
-  const [bubbles, setBubbles] = useState<TBubbleDataNode[]>(() =>
-    root.descendants().slice(1)
-  );
+  const bubbles = useMemo(() => {
+    if (data && dynamicDimensions.width) {
+      let nodes: TBubbleDataNode | null = null;
+      if (group === "satellite") {
+        const dataGroup = { ...data };
+        nodes = packRootSVG(dataGroup, dynamicDimensions);
+      }
+      if (group === "touchPoint") {
+        const dataGroup = groupDataByValue({ ...data });
+        nodes = packRootSVG(dataGroup, dynamicDimensions);
+      }
+      if (group === "equity") {
+        const dataGroup = groupDataByEquity({ ...data });
+        nodes = packRootSVG(dataGroup, dynamicDimensions);
+      }
+      if (nodes) {
+        return nodes.descendants().slice(1);
+      }
+    }
+  }, [data, dynamicDimensions, group]);
 
   const resetScale = () => {
     setTransform({
@@ -40,28 +69,24 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
   };
 
   const onGroup = (value: TGroupTypes) => {
+    resetScale();
     if (transform.k > 1) {
-      resetScale();
+      setTimeout(() => {
+        setGroup(value);
+      }, 500);
+    } else {
+      setGroup(value);
     }
-    setGroup(value);
-    if (value === "satelite") {
-      setDataGroup(data);
-    }
-    if (value === "touchPoint") {
-      setDataGroup(groupDataByValue(data));
-    }
-    if (value === "equity") {
-      setDataGroup(groupDataByEquity(data));
-    }
-    setBubbles(root.descendants().slice(1));
   };
 
   const onClickBubble = useCallback(
     (bubble: TBubbleDataNode) => {
       if (bubble.depth <= 1) {
-        const scale = SVG_WIDTH / (bubble.r * 3);
-        const translateX = SVG_WIDTH / 2 - bubble.x * scale;
-        const translateY = SVG_WIDTH / 2 - bubble.y * scale;
+        const scale =
+          dynamicDimensions.width /
+          (bubble.r * Math.ceil(dynamicDimensions.height * 0.01));
+        const translateX = dynamicDimensions.width / 2 - bubble.x * scale;
+        const translateY = dynamicDimensions.height / 2 - bubble.y * scale;
 
         if (transform.k === 1) {
           setTransform({ x: translateX, y: translateY, k: scale });
@@ -73,7 +98,7 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
         }
       }
     },
-    [transform.k]
+    [dynamicDimensions.height, dynamicDimensions.width, transform.k]
   );
 
   return (
@@ -91,7 +116,9 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
         <button onClick={() => onGroup("touchPoint")}>
           Group by touchpoint values
         </button>
-        <button onClick={() => onGroup("satelite")}>Group by satelites</button>
+        <button onClick={() => onGroup("satellite")}>
+          Group by satellites
+        </button>
       </div>
       <div
         ref={containerRef}
@@ -110,19 +137,20 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
       >
         <svg
           onClick={() => resetScale()}
-          width={SVG_WIDTH}
-          height={SVG_WIDTH}
+          width={dynamicDimensions.width}
+          height={dynamicDimensions.height}
           ref={svgRef}
           style={{
             maxWidth: "100%",
             height: "auto",
             display: "block",
-            padding: 24,
+
             cursor: "pointer",
           }}
         >
+          <BubbleColors />
           <BubblesGroup x={transform.x} y={transform.y} k={transform.k}>
-            {bubbles.map((bubble, idx) => {
+            {bubbles?.map((bubble, idx) => {
               return (
                 <Bubble
                   bubble={bubble}

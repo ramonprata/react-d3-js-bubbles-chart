@@ -378,10 +378,10 @@ export const BUBBLES_MOCK_REAL_DATA = {
     {
       name: "Hero Products",
       children: [
-        { name: "Lincoln Navigator", value: 2.6, equity: "-4%" },
+        { name: "Lincoln Navigator", value: 2.6, equity: "+4%" },
         // { name: "Lincoln Aviator", value: 2.5, equity: "-3%" },
         // { name: "Lincoln Nautilus", value: 2.3, equity: "-8%" },
-        { name: "Lincoln Corsair", value: 2.2, equity: "-11%" },
+        { name: "Lincoln Corsair", value: 2.2, equity: "+11%" },
       ],
     },
     {
@@ -393,13 +393,13 @@ export const BUBBLES_MOCK_REAL_DATA = {
         //   equity: "+10%",
         // },
         { name: "Dealerships and Showrooms", value: 3, equity: "+9%" },
-        { name: "Customer Service Hotline", value: 2.8, equity: "+6%" },
+        // { name: "Customer Service Hotline", value: 2.8, equity: "+6%" },
         {
           name: "Experience Centers (Lincoln Experience Centers)",
           value: 2.7,
-          equity: "+4%",
+          equity: "-4%",
         },
-        // { name: "Website (Lincoln.com)", value: 2.6, equity: "+2%" },
+        { name: "Website (Lincoln.com)", value: 2.6, equity: "+2%" },
         // { name: "Social Media Accounts", value: 2.6, equity: "+2%" },
         // { name: "Online Configurator", value: 2.5, equity: "-1%" },
         // { name: "App (Lincoln Way App)", value: 2.4, equity: "-2%" },
@@ -419,9 +419,9 @@ export const BUBBLES_MOCK_REAL_DATA = {
         // { name: "Sponsored Events", value: 3, equity: "+9%" },
         // { name: "Television Commercials", value: 2.8, equity: "+4%" },
         // { name: "Public Relations Activities", value: 2.8, equity: "+9%" },
-        { name: "Influencer Collaborations", value: 2.6, equity: "+5%" },
+        { name: "Influencer Collaborations", value: 2.6, equity: "+15%" },
         { name: "Customer Support Teams", value: 2.1, equity: "-9%" },
-        { name: "Print Ads", value: 2.4, equity: "-1%" },
+        // { name: "Print Ads", value: 2.4, equity: "-1%" },
       ],
     },
     {
@@ -429,20 +429,20 @@ export const BUBBLES_MOCK_REAL_DATA = {
       children: [
         {
           name: "Customer Advisors (Lincoln Client Advisors)",
-          value: 2.5,
+          value: 3.3,
           equity: "-1%",
         },
         // { name: "Brand Ambassadors", value: 2.5, equity: "+3%" },
         // { name: "Service Technicians", value: 2.4, equity: "+4%" },
-        { name: "Sales Representatives", value: 2.3, equity: "-6%" },
-        { name: "Design and Engineering Teams", value: 2.4, equity: "-2%" },
-        { name: "Social Media Teams", value: 2.1, equity: "-9%" },
+        // { name: "Sales Representatives", value: 2.3, equity: "-6%" },
+        { name: "Design and Engineering Teams", value: 2.4, equity: "+2%" },
+        // { name: "Social Media Teams", value: 2.1, equity: "-9%" },
       ],
     },
     {
       name: "Services & Partnerships",
       children: [
-        { name: "Exclusive Ownership Experiences", value: 3.3, equity: "+12%" },
+        // { name: "Exclusive Ownership Experiences", value: 3.3, equity: "+12%" },
         { name: "Vehicle Service and Maintenance", value: 2.9, equity: "+5%" },
         // {
         //   name: "Customer Loyalty Programs (Lincoln Access Rewards)",

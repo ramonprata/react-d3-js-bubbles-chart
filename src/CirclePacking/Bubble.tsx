@@ -1,7 +1,7 @@
 import { useSpring, animated } from "react-spring";
 import { useState } from "react";
 import { TBubbleDataNode } from "./types/TBubbleDataNode";
-import { getColorEquity } from "./utils";
+import { getBubbleStyleColorsByEquality } from "./utils";
 
 type Props = {
   bubble: TBubbleDataNode;
@@ -23,14 +23,8 @@ const Bubble = ({ bubble, idx, onClickBubble }: Props) => {
     config: { tension: 300, friction: 10 },
   });
 
-  const stroke =
-    isHovered && bubble.depth === 1
-      ? {
-          stroke: "lightgray",
-          strokeWidth: 2,
-          strokeDasharray: "5, 5",
-        }
-      : {};
+  const bubbleColors = getBubbleStyleColorsByEquality(bubble);
+  const strokeProps = isHovered ? bubbleColors?.bubbleStroke : {};
 
   return (
     <>
@@ -38,9 +32,9 @@ const Bubble = ({ bubble, idx, onClickBubble }: Props) => {
         cx={cx}
         cy={cy}
         r={bubble.depth > 1 ? hoverProps.r : r}
-        fill={getColorEquity(bubble)}
+        fill={bubble.depth > 1 ? bubbleColors?.bubbleBackground : "white"}
         fillOpacity={opacity}
-        {...stroke}
+        {...strokeProps}
         onMouseEnter={() => {
           setIsHovered(true);
         }}

@@ -7,23 +7,23 @@ export const groupDataByValue = (data: ICirclePackingData) => {
     (p, n) => {
       const value = Number(n?.value ?? 0);
 
-      if (value > 0 && value < 2.5) {
-        p["range_0_25"].children.push(n);
+      if (value < 2.5) {
+        p["range_<_2.5"].children.push(n);
       } else if (value >= 2.5 && value < 3) {
-        p["range_25_3"].children.push(n);
+        p["range_2.5_3"].children.push(n);
       } else {
-        p["range_3_above"].children.push(n);
+        p["range_>_3"].children.push(n);
       }
       return p;
     },
     {
-      range_0_25: {
+      "range_<_2.5": {
         children: [],
       },
-      range_25_3: {
+      "range_2.5_3": {
         children: [],
       },
-      range_3_above: {
+      "range_>_3": {
         children: [],
       },
     }
