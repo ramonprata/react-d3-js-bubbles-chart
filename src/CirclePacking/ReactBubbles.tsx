@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { packRootSVG } from "./utils";
+import { getBubbleStyleColorsByEquality, packRootSVG } from "./utils";
 import { ICirclePackingData } from "./types/ICirclePackingData";
 import { groupDataByEquity, groupDataByValue } from "./groupData";
 
@@ -8,6 +8,7 @@ import Bubble from "./Bubble";
 import { TBubbleDataNode } from "./types/TBubbleDataNode";
 import BubblesGroup from "./BubblesGroup";
 import BubbleColors from "./BubbleColors";
+import { animated, useSpring } from "react-spring";
 
 interface ICirclePackingChartProps {
   data: ICirclePackingData;
@@ -133,11 +134,27 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
           justifyContent: "center",
           backgroundColor: "#F7F8FA",
           position: "relative",
-          top: 0,
-          left: 0,
         }}
       >
-        <svg
+        <div
+          style={{
+            width: "100%",
+
+            height: dynamicDimensions.height,
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}
+        >
+          {bubbles?.map((bubble, idx) => {
+            return (
+              <BubbleDiv key={idx} bubble={bubble}>
+                {bubble.value}
+              </BubbleDiv>
+            );
+          })}
+        </div>
+        {/* <svg
           onClick={() => resetScale()}
           width={dynamicDimensions.width}
           height={dynamicDimensions.height}
@@ -154,19 +171,57 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
           <BubblesGroup x={transform.x} y={transform.y} k={transform.k}>
             {bubbles?.map((bubble, idx) => {
               return (
-                <Bubble
-                  bubble={bubble}
-                  idx={idx}
-                  key={idx}
-                  onClickBubble={onClickBubble}
-                />
+                <>
+                  <Bubble
+                    bubble={bubble}
+                    idx={idx}
+                    key={idx}
+                    onClickBubble={onClickBubble}
+                  />
+                </>
               );
             })}
           </BubblesGroup>
-        </svg>
+        </svg> */}
       </div>
     </div>
   );
 };
 
 export default Bubbles;
+
+const BubbleDiv = ({ bubble }: { bubble: TBubbleDataNode }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const styles = useSpring({
+    transform: `translate(${bubble.x - bubble.r}px, ${
+      bubble.y - bubble.r
+    }px) scale(1)`,
+    config: { friction: 26 },
+  });
+
+  const hoverProps = useSpring({
+    r: isHovered ? bubble.r * 1.5 : bubble.r,
+    // config: { tension: 300, friction: 10 },
+    config: { duration: 300 },
+  });
+
+  const bubbleColors = getBubbleStyleColorsByEquality(bubble);
+  const strokeProps = isHovered ? bubbleColors?.bubbleStroke : {};
+
+  return (
+    <animated.div
+      style={{
+        position: "absolute",
+        // top: bubble.y - bubble.r,
+        // left: bubble.x - bubble.r,
+        width: bubble.r * 2,
+        aspectRatio: 1,
+        background: bubble.depth === 1 ? "violet" : "orange",
+        borderRadius: "50%",
+        ...styles,
+      }}
+    >
+      {bubble.value}
+    </animated.div>
+  );
+};

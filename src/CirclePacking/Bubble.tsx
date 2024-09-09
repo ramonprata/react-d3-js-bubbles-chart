@@ -49,11 +49,11 @@ const Bubble = ({ bubble, idx, onClickBubble }: Props) => {
         {...strokeProps}
         style={{ cursor: "pointer" }}
       />
-      {bubble.depth > 1 && (
+      {/* {bubble.depth > 1 && (
         <animated.text x={cx} y={cy} textAnchor={"middle"}>
           {bubble.value}
         </animated.text>
-      )}
+      )} */}
     </g>
   );
 };
