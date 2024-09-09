@@ -27,7 +27,18 @@ const Bubble = ({ bubble, idx, onClickBubble }: Props) => {
   const strokeProps = isHovered ? bubbleColors?.bubbleStroke : {};
 
   return (
-    <>
+    <g
+      onMouseEnter={() => {
+        setIsHovered(true);
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClickBubble(bubble, idx);
+      }}
+    >
       <animated.circle
         cx={cx}
         cy={cy}
@@ -35,19 +46,14 @@ const Bubble = ({ bubble, idx, onClickBubble }: Props) => {
         fill={bubble.depth > 1 ? bubbleColors?.bubbleBackground : "white"}
         fillOpacity={opacity}
         {...strokeProps}
-        onMouseEnter={() => {
-          setIsHovered(true);
-        }}
-        onMouseLeave={() => {
-          setIsHovered(false);
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClickBubble(bubble, idx);
-        }}
         style={{ cursor: "pointer" }}
       />
-    </>
+      {bubble.depth > 1 && (
+        <animated.text x={cx} y={cy} textAnchor={"middle"}>
+          {bubble.value}
+        </animated.text>
+      )}
+    </g>
   );
 };
 

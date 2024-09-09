@@ -96,13 +96,15 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
             setTransform({ x: translateX, y: translateY, k: scale });
           }, 500);
         }
+      } else {
+        alert("Bubble clicked");
       }
     },
     [dynamicDimensions.height, dynamicDimensions.width, transform.k]
   );
 
   return (
-    <>
+    <div style={{ position: "relative" }}>
       <div
         style={{
           padding: 24,
@@ -163,7 +165,7 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
           </BubblesGroup>
         </svg>
       </div>
-    </>
+    </div>
   );
 };
 
