@@ -9,7 +9,7 @@ interface IBubblesGroupProps extends PropsWithChildren {
 const BubblesGroup = ({ children, x, y, k }: IBubblesGroupProps) => {
   const styles = useSpring({
     transform: `translate(${x}px, ${y}px) scale(${k})`,
-    config: { tension: 170, friction: 26 },
+    config: { friction: 26 },
   });
 
   return <animated.g style={styles}>{children}</animated.g>;

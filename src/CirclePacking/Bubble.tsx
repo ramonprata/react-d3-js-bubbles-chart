@@ -15,12 +15,13 @@ const Bubble = ({ bubble, idx, onClickBubble }: Props) => {
   const { cx, cy, r, opacity } = useSpring({
     to: { cx: bubble.x, cy: bubble.y, r: bubble.r, opacity: 1 },
     from: { cx: 0, cy: 0, r: 0, opacity: 0 },
-    config: { duration: 600, tension: 1000, friction: 100 },
+    config: { duration: 600 },
   });
 
   const hoverProps = useSpring({
-    r: isHovered ? bubble.r * 1.4 : bubble.r,
-    config: { tension: 300, friction: 10 },
+    r: isHovered ? bubble.r * 1.5 : bubble.r,
+    // config: { tension: 300, friction: 10 },
+    config: { duration: 300 },
   });
 
   const bubbleColors = getBubbleStyleColorsByEquality(bubble);

@@ -128,7 +128,7 @@ const Bubbles = ({ data }: ICirclePackingChartProps) => {
           width: "100%",
           height: "100%",
           minHeight: "50vh",
-          border: "dashed 1px red",
+          border: "dashed 1px lightGray",
           display: "flex",
           justifyContent: "center",
           backgroundColor: "#F7F8FA",
