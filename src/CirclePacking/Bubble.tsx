@@ -25,7 +25,7 @@ const Bubble = ({ bubble, idx, onClickBubble }: Props) => {
   });
 
   const bubbleColors = getBubbleStyleColorsByEquality(bubble);
-  const strokeProps = isHovered ? bubbleColors?.bubbleStroke : {};
+  const strokeProps = isHovered ? bubbleColors?.border : {};
 
   return (
     <g

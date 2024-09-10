@@ -30,21 +30,14 @@ export const getBubbleStyleColorsByEquality = (d: TBubbleDataNode) => {
   if (d.depth === 1) {
     return {
       bubbleMainColor: "white",
-      bubbleStroke: {
-        strokeWidth: 1,
-        strokeDasharray: "5.5",
-        stroke: "lightGray",
-      },
+      border: "1px lightGray dashed",
       bubbleBackground: "white",
     };
   }
   if (d.data.type === "legend") {
     return {
       bubbleMainColor: "white",
-      bubbleStroke: {
-        strokeWidth: 1,
-        stroke: "lightgray",
-      },
+      border: "1px lightGray dashed",
       bubbleBackground: "white",
     };
   }
@@ -55,31 +48,23 @@ export const getBubbleStyleColorsByEquality = (d: TBubbleDataNode) => {
     if (equityValue <= 0) {
       return {
         bubbleMainColor: "#FF143C",
-        bubbleStroke: {
-          strokeWidth: 1,
-          stroke: "#FF143C",
-        },
-        bubbleBackground: "url(#gradRed)",
+        border: "1px #FF143C solid",
+        bubbleBackground: "radial-gradient(circle, #fff 30%, #FF143C40)",
       };
     }
     if (equityValue < 0.1) {
       return {
         bubbleMainColor: "#FFA119",
-        bubbleStroke: {
-          strokeWidth: 1,
-          stroke: "#FFA119",
-        },
-        bubbleBackground: "url(#gradOrange)",
+        border: "1px #FFA119 solid",
+
+        bubbleBackground: "radial-gradient(circle, #fff 30%, #FFA11940)",
       };
     }
 
     return {
       bubbleMainColor: "#06A228",
-      bubbleStroke: {
-        strokeWidth: 1,
-        stroke: "#06A228",
-      },
-      bubbleBackground: "url(#gradGreen)",
+      border: "1px #06A228 solid",
+      bubbleBackground: "radial-gradient(circle, #fff 30%, #06A22840)",
     };
   }
 };
